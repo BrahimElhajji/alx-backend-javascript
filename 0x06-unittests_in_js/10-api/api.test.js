@@ -1,6 +1,6 @@
 const request = require('supertest');
 const { expect } = require('chai');
-const app = require('./api'); // Import the exported app
+const app = require('./api');
 
 describe('Index page', () => {
   it('should return the correct status code', (done) => {
@@ -41,5 +41,22 @@ describe('/login endpoint', () => {
       .send({ userName: 'Betty' })
       .expect(200)
       .expect('Welcome Betty', done);
+  });
+});
+
+describe('Cart page', () => {
+  it('should return correct status code when :id is a number', (done) => {
+    request.get('http://localhost:7865/cart/12', (error, response, body) => {
+      expect(response.statusCode).to.equal(200);
+      expect(body).to.equal('Payment methods for cart 12');
+      done();
+    });
+  });
+
+  it('should return 404 status code when :id is NOT a number', (done) => {
+    request.get('http://localhost:7865/cart/hello', (error, response, body) => {
+      expect(response.statusCode).to.equal(404);
+      done();
+    });
   });
 });
