@@ -22,8 +22,12 @@ app.post('/login', (req, res) => {
   res.send(`Welcome ${userName}`);
 });
 
-app.listen(port, () => {
-  console.log(`API available on localhost port ${port}`);
-});
-
+// Export the app instance
 module.exports = app;
+
+// Start the server only if this file is run directly
+if (require.main === module) {
+  app.listen(port, () => {
+    console.log(`API available on localhost port ${port}`);
+  });
+}

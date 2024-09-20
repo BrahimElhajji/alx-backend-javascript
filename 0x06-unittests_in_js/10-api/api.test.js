@@ -1,6 +1,6 @@
 const request = require('supertest');
-const express = require('express');
-const app = require('./api'); // Make sure your api.js exports the app
+const { expect } = require('chai');
+const app = require('./api'); // Import the exported app
 
 describe('Index page', () => {
   it('should return the correct status code', (done) => {
