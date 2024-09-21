@@ -23,7 +23,7 @@ async function countStudents(path) {
     });
 
     Object.keys(fieldCounts).forEach((field) => {
-      output += `\nNumber of students in ${field}: ${fieldCounts[field]}. List: ${fieldStudents[field].join(', ')}`;
+      output += `Number of students in ${field}: ${fieldCounts[field]}. List: ${fieldStudents[field].join(', ')}\n`;
     });
 
     return output;
