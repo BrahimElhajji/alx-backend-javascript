@@ -7,7 +7,7 @@ async function countStudents(path) {
     const lines = data.split('\n').filter((line) => line.trim() !== '');
     const students = lines.slice(1);
 
-    let output = `Number of students: ${students.length}`;
+    let output = `Number of students: ${students.length}\n`;
 
     const fieldCounts = {};
     const fieldStudents = {};
@@ -23,7 +23,9 @@ async function countStudents(path) {
     });
 
     Object.keys(fieldCounts).forEach((field) => {
-      output += `Number of students in ${field}: ${fieldCounts[field]}. List: ${fieldStudents[field].join(', ')}\n`;
+      if (Object.prototype.hasOwnProperty.call(fieldCounts, field)) {
+        output += `Number of students in ${field}: ${fieldCounts[field]}. List: ${fieldStudents[field].join(', ')}\n`;
+      }
     });
 
     return output;
@@ -43,10 +45,9 @@ const app = http.createServer(async (req, res) => {
       const output = await countStudents(databasePath);
       res.end(`This is the list of our students\n${output}`);
     } catch (error) {
-      res.end(`Error: ${error.message}`);
+      res.end(`This is the list of our students\n${error.message}`);
     }
   } else {
-    res.writeHead(404, { 'Content-Type': 'text/plain' });
     res.end('Not found');
   }
 });
