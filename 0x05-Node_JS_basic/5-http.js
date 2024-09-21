@@ -1,35 +1,69 @@
 const http = require('http');
-const countStudents = require('./3-read_file_async');
+const fs = require('fs');
+const { argv } = require('process');
+
+function countStudents(path, stream) {
+  if (fs.existsSync(path)) {
+    const data = fs.readFileSync(path, 'utf8');
+    const result = [];
+    data.split('\n').forEach((line) => {
+      result.push(line.split(','));
+    });
+    
+    // Remove the header
+    result.shift();
+    
+    const students = result.map((data) => [data[0], data[3]]); // [firstName, field]
+    const fields = new Set(students.map((student) => student[1]));
+    const finalCounts = {};
+    
+    fields.forEach((field) => { finalCounts[field] = 0; });
+    students.forEach((student) => { finalCounts[student[1]] += 1; });
+    
+    stream.write(`Number of students: ${result.length}\n`);
+    
+    Object.keys(finalCounts).forEach((field) => {
+      const names = students
+        .filter((student) => student[1] === field)
+        .map((student) => student[0])
+        .join(', ');
+      stream.write(`Number of students in ${field}: ${finalCounts[field]}. List: ${names}\n`);
+    });
+  } else {
+    throw new Error('Cannot load the database');
+  }
+}
+
+const hostname = 'localhost';
+const port = 1245;
 
 const app = http.createServer((req, res) => {
-  const url = req.url;
+  res.statusCode = 200;
+  res.setHeader('Content-Type', 'text/plain');
+  const { url } = req;
   
   if (url === '/') {
-    res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.end('Hello Holberton School!');
+    res.write('Hello Holberton School!\n');
+    res.end();
   } else if (url === '/students') {
-    // Get the database file name from the command line arguments
-    const dbFilePath = process.argv[2];
-
-    countStudents(dbFilePath)
-      .then(() => {
-        res.writeHead(200, { 'Content-Type': 'text/plain' });
-        res.end('This is the list of our students');
-      })
-      .catch((error) => {
-        res.writeHead(500, { 'Content-Type': 'text/plain' });
-        res.end(`${error.message}`);
-      });
+    res.write('This is the list of our students\n');
+    try {
+      countStudents(argv[2], res);
+      res.end();
+    } catch (err) {
+      res.write(err.message);
+      res.end();
+    }
   } else {
-    res.writeHead(404, { 'Content-Type': 'text/plain' });
-    res.end('Not Found');
+    res.statusCode = 404;
+    res.write('Not Found\n');
+    res.end();
   }
 });
 
-// The server listens on port 1245
-const PORT = 1245;
-app.listen(PORT, () => {
-  console.log(`Server is listening on port ${PORT}`);
+// Start the server
+app.listen(port, hostname, () => {
+  console.log(`Server is listening on http://${hostname}:${port}/`);
 });
 
 // Export the app for potential testing or further use
