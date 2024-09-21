@@ -10,7 +10,16 @@ app.get('/', (req, res) => {
 
 // Handle all other endpoints
 app.use((req, res) => {
-  res.status(404).send('<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Error</title></head><body><pre>Cannot GET ' + req.originalUrl + '</pre></body></html>');
+  res.status(404).send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Error</title>
+</head>
+<body>
+  <pre>Cannot GET ${req.originalUrl}</pre>
+</body>
+</html>`);
 });
 
 // Start the server
