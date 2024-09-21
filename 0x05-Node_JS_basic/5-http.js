@@ -7,21 +7,29 @@ function countStudents(path, stream) {
     const data = fs.readFileSync(path, 'utf8');
     const result = [];
     data.split('\n').forEach((line) => {
-      result.push(line.split(','));
+      const studentData = line.split(',');
+      // Only push if there is a valid field
+      if (studentData[3]) {
+        result.push(studentData);
+      }
     });
-    
+
     // Remove the header
     result.shift();
-    
+
     const students = result.map((data) => [data[0], data[3]]); // [firstName, field]
     const fields = new Set(students.map((student) => student[1]));
     const finalCounts = {};
-    
+
     fields.forEach((field) => { finalCounts[field] = 0; });
-    students.forEach((student) => { finalCounts[student[1]] += 1; });
-    
+    students.forEach((student) => {
+      if (student[1]) {
+        finalCounts[student[1]] += 1;
+      }
+    });
+
     stream.write(`Number of students: ${result.length}\n`);
-    
+
     Object.keys(finalCounts).forEach((field) => {
       const names = students
         .filter((student) => student[1] === field)
@@ -43,10 +51,10 @@ const app = http.createServer((req, res) => {
   const { url } = req;
   
   if (url === '/') {
-    res.write('Hello Holberton School!\n');
+    res.write('Hello Holberton School!');
     res.end();
   } else if (url === '/students') {
-    res.write('This is the list of our students\n');
+    res.write('This is the list of our students');
     try {
       countStudents(argv[2], res);
       res.end();
