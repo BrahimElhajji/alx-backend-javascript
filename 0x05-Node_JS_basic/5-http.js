@@ -1,78 +1,59 @@
 const http = require('http');
-const fs = require('fs');
-const { argv } = require('process');
+const fs = require('fs').promises;
 
-function countStudents(path, stream) {
-  if (fs.existsSync(path)) {
-    const data = fs.readFileSync(path, 'utf8');
-    const result = [];
-    data.split('\n').forEach((line) => {
-      const studentData = line.split(',');
-      // Only push if there is a valid field
-      if (studentData[3]) {
-        result.push(studentData);
-      }
-    });
+async function countStudents(path) {
+  try {
+    const data = await fs.readFile(path, 'utf8');
+    const lines = data.split('\n').filter((line) => line.trim() !== '');
+    const students = lines.slice(1);
 
-    // Remove the header
-    result.shift();
+    let output = `Number of students: ${students.length}\n`;
 
-    const students = result.map((data) => [data[0], data[3]]); // [firstName, field]
-    const fields = new Set(students.map((student) => student[1]));
-    const finalCounts = {};
+    const fieldCounts = {};
+    const fieldStudents = {};
 
-    fields.forEach((field) => { finalCounts[field] = 0; });
     students.forEach((student) => {
-      if (student[1]) {
-        finalCounts[student[1]] += 1;
+      const [firstName, , , field] = student.split(',');
+      if (!fieldCounts[field]) {
+        fieldCounts[field] = 0;
+        fieldStudents[field] = [];
       }
+      fieldCounts[field] += 1;
+      fieldStudents[field].push(firstName);
     });
 
-    stream.write(`Number of students: ${result.length}\n`);
-
-    Object.keys(finalCounts).forEach((field) => {
-      const names = students
-        .filter((student) => student[1] === field)
-        .map((student) => student[0])
-        .join(', ');
-      stream.write(`Number of students in ${field}: ${finalCounts[field]}. List: ${names}\n`);
+    Object.keys(fieldCounts).forEach((field) => {
+      output += `Number of students in ${field}: ${fieldCounts[field]}. List: ${fieldStudents[field].join(', ')}\n`;
     });
-  } else {
+
+    return output;
+  } catch (error) {
     throw new Error('Cannot load the database');
   }
 }
 
-const hostname = 'localhost';
-const port = 1245;
+const app = http.createServer(async (req, res) => {
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
 
-const app = http.createServer((req, res) => {
-  res.statusCode = 200;
-  res.setHeader('Content-Type', 'text/plain');
-  const { url } = req;
-  
-  if (url === '/') {
-    res.write('Hello Holberton School!');
-    res.end();
-  } else if (url === '/students') {
-    res.write('This is the list of our students');
+  if (req.url === '/') {
+    res.end('Hello Holberton School!\n');
+  } else if (req.url === '/students') {
     try {
-      countStudents(argv[2], res);
-      res.end();
-    } catch (err) {
-      res.write(err.message);
-      res.end();
+      const databasePath = process.argv[2];
+      const output = await countStudents(databasePath);
+      res.end(`This is the list of our students\n${output}`);
+    } catch (error) {
+      res.end(`Error: ${error.message}\n`);
     }
   } else {
-    res.statusCode = 404;
-    res.write('Not Found\n');
-    res.end();
+    res.writeHead(404, { 'Content-Type': 'text/plain' });
+    res.end('Not found\n');
   }
 });
 
-// Start the server
-app.listen(port, hostname, () => {
-  console.log(`Server is listening on http://${hostname}:${port}/`);
+const port = 1245;
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
 });
 
-// Export the app for potential testing or further use
 module.exports = app;
