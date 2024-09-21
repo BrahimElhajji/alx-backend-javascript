@@ -7,7 +7,7 @@ async function countStudents(path) {
     const lines = data.split('\n').filter((line) => line.trim() !== '');
     const students = lines.slice(1);
 
-    let output = `Number of students: ${students.length}\n`;
+    let output = `Number of students: ${students.length}`;
 
     const fieldCounts = {};
     const fieldStudents = {};
@@ -23,7 +23,7 @@ async function countStudents(path) {
     });
 
     Object.keys(fieldCounts).forEach((field) => {
-      output += `Number of students in ${field}: ${fieldCounts[field]}. List: ${fieldStudents[field].join(', ')}\n`;
+      output += `\nNumber of students in ${field}: ${fieldCounts[field]}. List: ${fieldStudents[field].join(', ')}`;
     });
 
     return output;
@@ -36,18 +36,18 @@ const app = http.createServer(async (req, res) => {
   res.writeHead(200, { 'Content-Type': 'text/plain' });
 
   if (req.url === '/') {
-    res.end('Hello Holberton School!\n');
+    res.end('Hello Holberton School!');
   } else if (req.url === '/students') {
     try {
       const databasePath = process.argv[2];
       const output = await countStudents(databasePath);
       res.end(`This is the list of our students\n${output}`);
     } catch (error) {
-      res.end(`Error: ${error.message}\n`);
+      res.end(`Error: ${error.message}`);
     }
   } else {
     res.writeHead(404, { 'Content-Type': 'text/plain' });
-    res.end('Not found\n');
+    res.end('Not found');
   }
 });
 
